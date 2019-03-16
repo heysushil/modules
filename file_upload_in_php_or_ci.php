@@ -61,3 +61,31 @@
       $this->session->set_flashdata('warning', 'Something wrong. Try again');
       redirect('Login');
     }
+
+
+// For downloading the uploaded folder need this code
+
+//First on view add button with id.
+<td><a href="<?php echo base_url();?>Dashboard/download_doc/<?php echo $row['doc_id'];?>"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+
+// Then add this on controller
+public function download_doc()
+  {
+    if($this->session->userdata('user') && $this->session->userdata('user_type') == 'super' || $this->session->userdata('user_type') == 'admin'){
+      $doc_id = $this->uri->segment('3');
+      $data = array();    
+      // $this->load->dbutil();
+      // $this->load->helper('file');
+      $this->load->helper('download');
+      $sql = "SELECT file_name from document where doc_id = $doc_id";
+      $data = $this->model->getSqlData($sql);
+      $file_name = substr($data[0]['file_name'], 12);
+      $file_path = 'uploads/'.$data[0]['file_name'];
+      force_download($file_name, file_get_contents($file_path));
+    }else{
+      $this->session->set_flashdata('warning', 'Something wrong. Try again');
+      redirect('Login');
+    }
+    
+  }
+
