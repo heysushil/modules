@@ -89,3 +89,40 @@ public function download_doc()
     
   }
 
+
+// Code for Deleting the uploaded files on server.
+// Add on view this button code
+<td><a class="delete" href="<?php echo base_url();?>Dashboard/deleteDocument/<?php echo $row['doc_id'];?>" data-confirm="Are you sure to delete this item?"><i class="fa fa-trash-o" aria-hidden="true"></i></a></td>
+
+// Know add the controller code
+public function deleteDocument()
+  {    
+    if($this->session->userdata('user') && $this->session->userdata('user_type') == 'super') {
+      $doc_id = $this->uri->segment('3');
+      $sql = "SELECT file_name FROM document WHERE doc_id=$doc_id";
+      $fileName = $this->model->getSqlData($sql);
+      $path = 'uploads/'.$fileName[0]['file_name'];
+      if(is_readable($path) && unlink($path)) {
+        $sql_doc = $this->model->deleteDoc('document', $doc_id);
+        $this->session->set_flashdata('warning', 'Document deleted successfully.');
+        redirect('Dashboard');
+      }
+    }else{
+      $this->session->set_flashdata('warning', 'Something wrong. Try again');
+      redirect('Login');
+    }
+  }
+
+//Model code For Delete function used. This code work for when you pass query form your controller to here.
+public function getSqlData($sql)
+  {
+    $query = $this->db->query($sql);
+    if($query->num_rows()>0) {
+      $result = $query->result_array();
+      // echo "<pre>";print_r($result);echo "<pre>";exit();
+      return $result;
+    }else {
+      return FALSE;
+    }
+  }
+
