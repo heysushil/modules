@@ -22,37 +22,45 @@
     </div>
 // End of View page code
 
-// This is a controller code 
 
-  public function upload_doc()
+//Controller code for uploading document
+
+public function upload_doc()
   {
-    if($this->session->userdata('user') && $this->session->userdata('user_type') == 'super') {
+    if($this->session->userdata('user') && $this->session->userdata('user_type') == 'super' || $this->session->userdata('user_type') == 'admin') {
       if(!empty($_FILES['doc']['name'])) // doc is input type name="doc" 
       {
-        //Check whether user upload picture
+        $sales = $this->input->post('sales');
+        $backend = $this->input->post('backend');
+        $audit = $this->input->post('audit');
+        $sub_admin = $this->session->userdata('subType');
         $attachment_file = $_FILES["doc"];
         $output_dir = "uploads/";
-        $fileName = $_FILES["doc"]["name"];
+        $file = $_FILES["doc"]["name"];
+        $file_size = number_format($_FILES["doc"]["size"] / 1048576, 2) . ' MB';
+        $randum = date("dmyhis"); //use for add same name data.
+        $fileName = $randum.$file;
         $document_path = $output_dir.$fileName;
-        // print_r($document_path);exit();
-        $allowed =  array('*');
-        // $allowed =  array('gif','png','jpg','jpeg','zip');
         $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        // $max_filesize = 314572800;   // set max file size
-        if(!in_array($ext,$allowed) ) {
-          $this->session->set_flashdata('warning', 'Wrong type file choosen. Choose right one.');
-          redirect('Dashboard');
-          exit();
-        } // Code for checking max size of file.
-        /*elseif(filesize($_FILES['doc']['tmp_name']) > $min_filesize){
-          $this->session->set_flashdata('warning', 'File size is more than 300 MB. Try to reduce size.');
-          redirect('Dashboard');
-          exit();
-        }*/
-
-        move_uploaded_file($_FILES["doc"]["tmp_name"],$document_path);
-        $this->session->set_flashdata('success', 'File uploaded successfully');
-        redirect('Dashboard');
+        $data = array(
+                  'file_name' => $fileName,
+                  'size' => $file_size,
+                  'date_of_modify' => date("d/m/y"),
+                  'admin_id' => $this->input->post('user_id'),
+                  'sales' => $this->input->post('sales'),
+                  'backend' => $this->input->post('backend'),
+                  'audit' => $this->input->post('audit')
+        );
+<!--         var_dump($data);exit(); -->
+        $result = $this->model->insertData('document', $data);
+        if($result == TRUE) {
+          move_uploaded_file($_FILES["doc"]["tmp_name"],$document_path);
+          $this->session->set_flashdata('success', 'File uploaded successfully');
+          redirect('Dashboard');  
+        }else {
+          $this->session->set_flashdata('error', 'Something wrong. Try again.');
+          redirect('Dashboard');  
+        }        
       }else{
         $this->session->set_flashdata('error', 'No attachment. Browse one and try again.');
         $this->index();
@@ -61,6 +69,26 @@
       $this->session->set_flashdata('warning', 'Something wrong. Try again');
       redirect('Login');
     }
+}
+
+//Model code for upload_doc controller
+public function insertData($tableName, $array_data)
+  {
+    try {
+      if(isset($tableName) && isset($array_data)) {
+        $this->db->trans_start();
+        $this->db->insert($tableName, $array_data);
+        $globals_id = $this->db->insert_id();
+        //print_r($globals_id);exit();
+        $this->db->trans_complete();
+        return TRUE;
+      }else {
+        return false;
+      }
+    } catch (Exception $e) {
+        return false;
+    }
+  }
 
 
 // For downloading the uploaded folder need this code
@@ -85,10 +113,21 @@ public function download_doc()
     }else{
       $this->session->set_flashdata('warning', 'Something wrong. Try again');
       redirect('Login');
-    }
-    
+    }    
   }
-
+//Model code for download_doc functon
+public function getSqlData($sql)
+  {
+    $query = $this->db->query($sql);
+    if($query->num_rows()>0) {
+      $result = $query->result_array();
+      // echo "<pre>";print_r($result);echo "<pre>";exit();
+      return $result;
+    }else {
+      return FALSE;
+    }
+  }
+  
 
 // Code for Deleting the uploaded files on server.
 // Add on view this button code
@@ -113,7 +152,7 @@ public function deleteDocument()
     }
   }
 
-//Model code For Delete function used. This code work for when you pass query form your controller to here.
+//Model code For deleteDocument function of controller used. This code work for when you pass query form your controller to here.
 public function getSqlData($sql)
   {
     $query = $this->db->query($sql);
@@ -125,4 +164,20 @@ public function getSqlData($sql)
       return FALSE;
     }
   }
-
+  
+public function deleteDoc($tableName, $id)
+  {
+    if(isset($id)) {
+      $this->db->trans_start();
+      $this->db->where('doc_id', $id);
+      $this->db->delete($tableName);
+      $this->db->trans_complete();
+      if($this->db->affected_rows() > 0) {
+        return TRUE;
+      }else {
+        return FALSE;
+      }
+    }else {
+      return FALSE;
+    }
+  }
