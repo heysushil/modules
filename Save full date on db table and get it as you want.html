@@ -1,0 +1,16 @@
+Save full date on db table and get it as you want
+
+Like you save date on table by
+$date = date("Y-m-d l H:i:s");
+
+It saves in table like this 2019/4/14 01:25:00
+
+So you want date time day seperatly on table
+If you take data on foreach 
+
+<?php foreach($booking as $val){ $date = date_create($val->bookingDate);?>
+
+<td><?php echo date_format($date,"Y/m/d") ;?></td>
+<td><?php echo date_format($date,"l") ;?></td>
+<td><?php echo date_format($date,"h:i A") ;?></td>
+
