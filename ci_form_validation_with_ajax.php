@@ -26,6 +26,8 @@ $config = array(
 );
 
 //--------After defining validation rule go into controller----------
+// In this controller create on function which have if else in whihc call the form_validation which also must to include in constructer
+// at top to use it here or auto load it.	
 
 public function studentRegistrationFormData()
 	{
@@ -42,6 +44,10 @@ public function studentRegistrationFormData()
    }
    
 //------For ajax response---------
+// In this example pass the from value by ajax so here is the js code to pass the html form data to contreller at once.
+// also after getting json response from controller show the success or error message on html page by the bootstrap alert.
+// html alert div define at last in this page
+	
 $('#submit').submit(function(e){
         e.preventDefault(); 
          $.ajax({
